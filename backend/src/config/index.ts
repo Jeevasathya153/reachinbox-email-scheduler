@@ -21,6 +21,7 @@ export const config = {
     host: process.env.REDIS_HOST || '127.0.0.1',
     port: parseInt(process.env.REDIS_PORT || '6379', 10),
     password: process.env.REDIS_PASSWORD || undefined,
+    tls: process.env.REDIS_TLS === 'true',
   },
 
   elasticsearch: {
@@ -37,18 +38,25 @@ export const config = {
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID || '',
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-    callbackUrl: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3000/auth/google/callback',
+    callbackUrl:
+      process.env.GOOGLE_CALLBACK_URL ||
+      'http://localhost:3000/auth/google/callback',
   },
 
   slack: {
     clientId: process.env.SLACK_CLIENT_ID || '',
     clientSecret: process.env.SLACK_CLIENT_SECRET || '',
-    redirectUri: process.env.SLACK_REDIRECT_URI || 'http://localhost:3000/api/slack/callback',
+    redirectUri:
+      process.env.SLACK_REDIRECT_URI ||
+      'http://localhost:3000/api/slack/callback',
   },
 
   worker: {
     concurrency: parseInt(process.env.WORKER_CONCURRENCY || '5', 10),
     minDelayMs: parseInt(process.env.MIN_EMAIL_DELAY_MS || '2000', 10),
-    maxEmailsPerHour: parseInt(process.env.MAX_EMAILS_PER_HOUR || '200', 10),
+    maxEmailsPerHour: parseInt(
+      process.env.MAX_EMAILS_PER_HOUR || '200',
+      10
+    ),
   },
 };

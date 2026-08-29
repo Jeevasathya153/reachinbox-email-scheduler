@@ -5,13 +5,16 @@ export const redisConnectionOptions = {
   host: config.redis.host,
   port: config.redis.port,
   password: config.redis.password,
-  maxRetriesPerRequest: null, // Required by BullMQ
+  maxRetriesPerRequest: null,
   enableReadyCheck: false,
+
+  ...(config.redis.tls ? { tls: {} } : {}),
+
   retryStrategy(times: number) {
-    // Retry with exponential backoff capped at 5 seconds
     return Math.min(times * 500, 5000);
   },
 };
+
 
 export const redisClient = new Redis(redisConnectionOptions);
 
@@ -19,10 +22,20 @@ let lastLogState: 'connected' | 'disconnected' | null = null;
 
 redisClient.on('connect', () => {
   if (lastLogState !== 'connected') {
-    console.log(`[Redis] Connecting to ${config.redis.host}:${config.redis.port}...`);
-    console.log('[Redis] Connected successfully to local Redis.');
+    console.log(
+      `[Redis] Connecting to ${config.redis.host}:${config.redis.port}...`
+    );
+
+    console.log('[Redis] Connected successfully.');
+
     lastLogState = 'connected';
   }
+});
+
+redisClient.on('ready', () => {
+  console.log(
+    `[Redis] Ready - ${config.redis.host}:${config.redis.port}`
+  );
 });
 
 redisClient.on('error', (err) => {
@@ -30,11 +43,25 @@ redisClient.on('error', (err) => {
     console.error(
       `[Redis] ERROR: Redis is unavailable at ${config.redis.host}:${config.redis.port}. (${err.message})`
     );
-    console.error('[Redis] BullMQ scheduling cannot operate until Redis is running.');
+
+    console.error(
+      '[Redis] BullMQ scheduling cannot operate until Redis is available.'
+    );
+
+    lastLogState = 'disconnected';
+  }
+});
+
+redisClient.on('close', () => {
+  if (lastLogState !== 'disconnected') {
+    console.error('[Redis] Connection closed.');
     lastLogState = 'disconnected';
   }
 });
 
 export function isRedisConnected(): boolean {
-  return redisClient.status === 'ready' || redisClient.status === 'connect';
+  return (
+    redisClient.status === 'ready' ||
+    redisClient.status === 'connect'
+  );
 }
