@@ -13,7 +13,7 @@ import emailRoutes from './routes/emailRoutes';
 import slackRoutes from './routes/slackRoutes';
 
 const app = express();
-
+app.set('trust proxy', 1);
 // 1. Core Middlewares
 app.use(
   cors({
@@ -25,7 +25,6 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
 app.use(
   session({
     secret: config.sessionSecret,
@@ -34,7 +33,8 @@ app.use(
     cookie: {
       secure: config.env === 'production',
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      sameSite: config.env === 'production' ? 'none' : 'lax',
+      maxAge: 24 * 60 * 60 * 1000,
     },
   })
 );
